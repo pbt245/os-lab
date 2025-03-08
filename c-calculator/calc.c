@@ -11,12 +11,10 @@ int main() {
     char input[MAX_INPUT];
     double ans = 0.0;
 
-    printf("Advanced Calculator (Type 'EXIT' to quit)\n");
-
     while (1) {
         printf(">> ");
         fgets(input, MAX_INPUT, stdin);
-        input[strcspn(input, "\n")] = 0; // Remove newline character
+        input[strcspn(input, "\n")] = 0;
 
         if (strcmp(input, "EXIT") == 0) {
             break;
@@ -25,7 +23,7 @@ int main() {
             continue;
         }
 
-        replace_ans(input, ans); // Replace "ANS" with the last answer
+        replace_ans(input, ans);
 
         double result;
         int status = calculate(input, &result);

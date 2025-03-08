@@ -8,7 +8,7 @@ int calculate(char *expression, double *result) {
     char op;
 
     if (sscanf(expression, "%lf %c %lf", &num1, &op, &num2) != 3) {
-        return SYNTAX_ERROR; // Syntax error
+        return SYNTAX_ERROR;
     }
 
     switch (op) {
