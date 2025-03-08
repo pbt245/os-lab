@@ -28,11 +28,12 @@ int main() {
         replace_ans(input, ans); // Replace "ANS" with the last answer
 
         double result;
-        if (calculate(input, &result) == 0) {
+        int status = calculate(input, &result);
+        if (status == SUCCESS) {
             ans = result;
             add_to_history(input, result);
             printf("%.2f\n", result);
-        } else {
+        } else if (status == SYNTAX_ERROR){
             printf("SYNTAX ERROR\n");
         }
     }

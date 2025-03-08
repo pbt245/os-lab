@@ -8,7 +8,7 @@ int calculate(char *expression, double *result) {
     char op;
 
     if (sscanf(expression, "%lf %c %lf", &num1, &op, &num2) != 3) {
-        return -1; // Syntax error
+        return SYNTAX_ERROR; // Syntax error
     }
 
     switch (op) {
@@ -18,14 +18,20 @@ int calculate(char *expression, double *result) {
         case '/': 
             if (num2 == 0) {
                 printf("MATH ERROR\n");
-                return -1;
+                return MATH_ERROR;
             }
             *result = num1 / num2; 
             break;
-        case '%': *result = (int)num1 % (int)num2; break;
-        default: return -1;
+        case '%':
+            if ((int)num2 == 0) {
+              printf("MATH ERROR\n");
+              return MATH_ERROR;
+            }
+            *result = (int)num1 % (int)num2;
+            break;
+        default: return SYNTAX_ERROR;
     }
 
-    return 0;
+    return SUCCESS;
 }
 
