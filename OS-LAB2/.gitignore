@@ -9,6 +9,9 @@
 
 ### Above combination will ignore all files without extension ###
 
+# unignore makefile
+!*/Makefile
+
 # Ignore files with extension `.class` & `.sm`
 *.class
 *.sm
