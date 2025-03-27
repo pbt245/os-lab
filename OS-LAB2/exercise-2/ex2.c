@@ -11,7 +11,6 @@ int count_ratings[MAX_MOVIES + 1] = {0};
 // Mutex lock for thread safety
 pthread_mutex_t lock;
 
-// Thread function to read file and compute movie ratings
 void *compute_average(void *arg)
 {
     char *filename = (char *)arg;
@@ -30,10 +29,10 @@ void *compute_average(void *arg)
     {
         if (movieID >= 1 && movieID <= MAX_MOVIES)
         {
-            pthread_mutex_lock(&lock); // Lock before updating global arrays
+            pthread_mutex_lock(&lock); // lock before updating global arrays
             sum_ratings[movieID] += rating;
             count_ratings[movieID]++;
-            pthread_mutex_unlock(&lock); // Unlock after update
+            pthread_mutex_unlock(&lock); // unlock after update
         }
     }
 
@@ -45,23 +44,22 @@ int main()
 {
     pthread_t thread1, thread2;
 
-    // Initialize the mutex
+    // init mutex
     pthread_mutex_init(&lock, NULL);
 
-    // Create two threads
+    // 2 threads
     pthread_create(&thread1, NULL, compute_average, "data/movie-100k_1.txt");
     pthread_create(&thread2, NULL, compute_average, "data/movie-100k_2.txt");
 
-    // Wait for both threads to complete
+    // wait both threads
     pthread_join(thread1, NULL);
     pthread_join(thread2, NULL);
 
-    // Write results to output.txt
     FILE *out_fp = fopen("output.txt", "w");
     if (!out_fp)
     {
-        perror("Error opening output file");
-        exit(EXIT_FAILURE);
+        perror("open output file fail");
+        exit(1);
     }
 
     fprintf(out_fp, "MovieID\tAverage Rating\n");
@@ -76,9 +74,8 @@ int main()
 
     fclose(out_fp);
 
-    // Destroy the mutex
-    pthread_mutex_destroy(&lock);
 
+    pthread_mutex_destroy(&lock);
     printf("Results written to output.txt\n");
     return 0;
 }
