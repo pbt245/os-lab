@@ -10,6 +10,4 @@ echo "Build All"
 make all
 
 echo "Running..."
-./ex1
-
-echo "Results in stored in output.txt!"
+./ex4
