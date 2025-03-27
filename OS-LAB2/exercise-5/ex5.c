@@ -29,10 +29,10 @@ void create_file(const char *filename, int size)
 
 int main()
 {
-    // Step 1: Create and size the file
+    // create and truncate file size
     create_file(FILENAME, FILESIZE);
 
-    // Step 2: Open the file for read/write
+    // open read write
     int fd = open(FILENAME, O_RDWR);
     if (fd == -1)
     {
@@ -40,7 +40,7 @@ int main()
         exit(1);
     }
 
-    // Step 3: Map the file into memory
+    // map to mem
     char *mapped_mem = mmap(NULL, FILESIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (mapped_mem == MAP_FAILED)
     {
@@ -48,26 +48,25 @@ int main()
         close(fd);
         exit(1);
     }
-    close(fd); // File descriptor no longer needed after mmap
+    close(fd);
 
-    // Step 4: Fork the process
+    // fork process
     pid_t pid = fork();
 
     if (pid == -1)
     {
-        perror("fork");
+        perror("fork fail");
         exit(1);
     }
-    else if (pid == 0)
-    {             // Child process
-        sleep(1); // Ensure parent writes first
-        printf("Child Process: Read from shared memory: %s\n", mapped_mem);
+    else if (pid == 0) // child
+    {             
+        printf("child reads from shm: %s\n", mapped_mem);
     }
-    else
-    { // Parent process
-        const char *message = "Hello from parent!";
+    else // parent
+    {
+        const char *message = "Reply from parent ";
         strncpy(mapped_mem, message, FILESIZE);
-        printf("Parent Process: Wrote to shared memory\n");
+        printf("parent writes to shm \n");
         wait(NULL);
     }
 
