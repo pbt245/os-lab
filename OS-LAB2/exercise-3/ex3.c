@@ -54,8 +54,7 @@ int main()
     }
 
     if (pid == 0) // child
-    {             
-        sleep(1); // time for rcv up
+    {
         fifo_snd("hey, MMB");
         exit(0);
     }
