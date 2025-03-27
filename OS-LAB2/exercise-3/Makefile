@@ -15,4 +15,4 @@ run: $(TARGET)
 	./$(TARGET)
 
 clean:
-	rm -f $(TARGET) abc_fifo
+	rm -f $(TARGET) abc_fifo_name

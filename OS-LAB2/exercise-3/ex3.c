@@ -55,7 +55,7 @@ int main()
 
     if (pid == 0) // child
     {
-        fifo_snd("hey, MMB");
+        fifo_snd("hey, yasuo");
         exit(0);
     }
     else // parent
