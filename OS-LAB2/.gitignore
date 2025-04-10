@@ -20,6 +20,7 @@
 bin/
 # or
 */bin/*
+*/.vscode/*
 
 # Unignore all `.jar` in `bin` dir
 !*/bin/*.jar
