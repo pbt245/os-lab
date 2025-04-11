@@ -2,7 +2,7 @@ CPP = g++ # Flag for implicit rule
 CC = gcc # Flag for implicit rule
 LD = ld # Flag for implicit ruli
 AR = ar
-GFLAGS = -std=c++11 -g -pthread -I./ -L.#Flag for implicit rule. Turn on debug mode
+GFLAGS = -std=c++11 -g -pthread -I./ -L. -no-pie#Flag for implicit rule. Turn on debug mode
 CFLAGS = -g -lpthread -I./ -L.
 LFLAGS = -g -I./ -L.
 ARFLAGS = rcs
