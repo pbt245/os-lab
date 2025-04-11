@@ -14,34 +14,64 @@ int use = 0;
 
 /*TODO: Fill in the synchronization stuff */
 
+// Synchronization variables
+sem_t empty;
+sem_t full;
+pthread_mutex_t pc_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 void put(int value); // put data into buffer
 int get();           // get data from buffer
 
-void * producer(void * arg) {
-  int i;
-  int tid = *((int*) arg);
-  for (i = 0; i < LOOPS; i++) {
-    /*TODO: Fill in the synchronization stuff */
-    put(i); // line P2
-    printf("Producer %d put data %d\n", tid, i);
-    sleep(1);
-    /*TODO: Fill in the synchronization stuff */
-  }
-  pthread_exit(NULL);
+void *producer(void *arg)
+{
+    int i;
+    int tid = *((int *)arg);
+    for (i = 0; i < LOOPS; i++)
+    {
+        /*TODO: Fill in the synchronization stuff */
+        sem_wait(&empty);              // Wait for empty slot
+        pthread_mutex_lock(&pc_mutex); // Lock the mutex
+
+        put(i); // line P2
+        printf("Producer %d put data %d\n", tid, i);
+
+        /*TODO: Fill in the synchronization stuff */
+        pthread_mutex_unlock(&pc_mutex); // Unlock the mutex
+        sem_post(&full);                 // Signal item available
+        sleep(1);
+    }
+
+    sem_wait(&empty);                // Signal end of production
+    pthread_mutex_lock(&pc_mutex);   // Lock the mutex
+    put(-1);                         // Put consumer terminal value
+    pthread_mutex_unlock(&pc_mutex); // Unlock the mutex
+    sem_post(&full);                 // Signal item available
+
+    pthread_exit(NULL);
 }
 
-void * consumer(void * arg) {
-  int i, tmp = 0;
-  int tid = *((int*) arg);
-  while (tmp != -1) {
-    /*TODO: Fill in the synchronization stuff */
-    tmp = get(); // line C2
-    printf("Consumer %d get data %d\n", tid, tmp);
-    sleep(1);
-    /*TODO: Fill in the synchronization stuff */
-  }
-  pthread_exit(NULL);
+void *consumer(void *arg)
+{
+    int tmp = 0;
+    int tid = *((int *)arg);
+    while (tmp != -1)
+    {
+        /*TODO: Fill in the synchronization stuff */
+        sem_wait(&full);               // Wait for item
+        pthread_mutex_lock(&pc_mutex); // lock the mutex
+
+        tmp = get();   // line C2
+        if (tmp != -1) // print only if not terminal value
+            printf("Consumer %d get data %d\n", tid, tmp);
+
+        /*TODO: Fill in the synchronization stuff */
+        pthread_mutex_unlock(&pc_mutex); // unlock the mutex
+        sem_post(&empty);                // Signal empty slot
+        sleep(1);
+    }
+    pthread_exit(NULL);
 }
+
 
 int main(int argc, char ** argv) {
   int i, j;
@@ -50,6 +80,9 @@ int main(int argc, char ** argv) {
   pthread_t consumers[THREADS];
 
   /*TODO: Fill in the synchronization stuff */
+  // Initialize synchronization variables
+  sem_init(&empty, 0, BUF_SIZE);
+  sem_init(&full, 0, 0);
 
   for (i = 0; i < THREADS; i++) {
     tid[i] = i;
@@ -66,6 +99,10 @@ int main(int argc, char ** argv) {
   }
 
   /*TODO: Fill in the synchronization stuff destroy (if needed) */
+  // Cleanup
+  sem_destroy(&empty);
+  sem_destroy(&full);
+  pthread_mutex_destroy(&pc_mutex);
 
   return 0;
 }
