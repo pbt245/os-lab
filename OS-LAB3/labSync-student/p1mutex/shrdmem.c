@@ -6,14 +6,25 @@
 int MAX_COUNT = 1e9;
 static int count = 0;
 
-void *f_count(void *sid) {
-  int i;
-  for (i = 0; i < MAX_COUNT; i++) {
-    count = count + 1;
-  }
+// Declare a mutex to protect the shared variable 'count'
+pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-  printf("Thread %s: holding %d \n", (char *) sid, count);
+void *f_count(void *sid)
+{
+    int i;
+    for (i = 0; i < MAX_COUNT; i++)
+    {
+        // Lock the mutex before accessing 'count'
+        pthread_mutex_lock(&count_mutex);
+        count = count + 1;
+        // Unlock the mutex after modifying 'count'
+        pthread_mutex_unlock(&count_mutex);
+    }
+
+    printf("Thread %s: holding %d \n", (char *)sid, count);
+    return NULL;
 }
+
 
 int main() {
   pthread_t thread1, thread2;
@@ -28,6 +39,9 @@ int main() {
 
   // Wait for thread th1 finish
   pthread_join( thread2, NULL);
+
+  // Destroy the mutex
+  pthread_mutex_destroy(&count_mutex);
 
   return 0;
 }
