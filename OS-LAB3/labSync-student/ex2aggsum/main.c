@@ -35,7 +35,7 @@ extern int generate_array_data (int* buf, int arraysize, int seednum);
 /** display help */
 extern void help (int xcode);
 
-void* sum_worker (struct _range idx_range);
+void* sum_worker (void *arg);
 long validate_sum(int arraysize);
 
 /* Global sum buffer */
@@ -43,13 +43,24 @@ long sumbuf = 0;
 int* shrdarrbuf;
 pthread_mutex_t mtx;
 
-void* sum_worker (struct _range idx_range) {
-   int i;
-   
-   //printf("In worker from %d to %d\n", idx_range.start, idx_range.end);
-   
-   return 0;
-		
+void *sum_worker(void *arg)
+{
+    struct _range *range = (struct _range *)arg;
+    long local_sum = 0;
+
+    // Compute the partial sum.
+    for (int i = range->start; i <= range->end; i++)
+    {
+        local_sum += shrdarrbuf[i];
+    }
+
+    // Lock the mutex before updating the global sum.
+    pthread_mutex_lock(&mtx);
+    sumbuf += local_sum;
+    // Unlock the mutex after updating the global sum.
+    pthread_mutex_unlock(&mtx);
+
+    return NULL;
 }
 
 int main(int argc, char * argv[]) {
@@ -116,9 +127,11 @@ int main(int argc, char * argv[]) {
     */
    tid = malloc (appconf.tnum * sizeof(pthread_t));
 
+   /* Initialize the mutex for protecting the global sum */
+   pthread_mutex_init(&mtx, NULL);
+	
    for (i=0; i < appconf.tnum; i++)
-      pthread_create(&tid[i], NULL, sum_worker, (
-                     struct _range) (thread_idx_range[i]));
+      pthread_create(&tid[i], NULL, sum_worker,&thread_idx_range[i]);
    for (i=0; i < appconf.tnum; i++)
       pthread_join(tid[i], NULL);
    fflush(stdout);
@@ -126,7 +139,14 @@ int main(int argc, char * argv[]) {
    printf("%s gives sum result %ld\n", PACKAGE, sumbuf);
 
    waitpid(pid);
-      exit(0);
+
+   /* Clean up resources */
+   pthread_mutex_destroy(&mtx);
+   free(thread_idx_range);
+   free(shrdarrbuf);
+   free(tid);
+	
+   exit(0);
 }
 
 long validate_sum(int arraysize)
