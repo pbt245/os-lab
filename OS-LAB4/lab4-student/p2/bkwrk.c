@@ -4,6 +4,8 @@
 #include <signal.h>
 #include <stdio.h>
 #include <sys/syscall.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 // #define DEBUG
@@ -23,7 +25,7 @@ int bkwrk_worker(void *arg)
     sigaddset(&set, SIGQUIT);
 
 #ifdef DEBUG
-    fprintf(stderr, "worker %i start living tid %d \n", i, getpid());
+    fprintf(stderr, "worker %i start living pid %d \n", i, getpid());
     fflush(stderr);
 #endif
 
@@ -44,6 +46,10 @@ int bkwrk_worker(void *arg)
         worker[i].func = NULL;
         worker[i].arg = NULL;
         worker[i].bktaskid = -1;
+
+#ifndef WORK_THREAD
+        _exit(0); // Exit process after task execution in fork version
+#endif
     }
 }
 
@@ -107,7 +113,33 @@ int bkwrk_create_worker()
 
         usleep(100);
 #else
-        /* TODO: Implement fork version of create worker */
+        pid_t pid = fork();
+        if (pid == -1)
+        {
+            fprintf(stderr, "Failed to fork worker %u\n", i);
+            return -1;
+        }
+        else if (pid == 0)
+        {
+            // Child process
+            sigset_t set;
+            sigemptyset(&set);
+            sigaddset(&set, SIGQUIT);
+            sigaddset(&set, SIGUSR1);
+            sigprocmask(SIG_BLOCK, &set, NULL);
+
+            unsigned int wrkid = i;
+            bkwrk_worker(&wrkid);
+            _exit(0); // Should not reach here
+        }
+        else
+        {
+            // Parent process
+            wrkid_tid[i] = pid;
+#ifdef INFO
+            fprintf(stderr, "bkwrk_create_worker got worker %u\n", wrkid_tid[i]);
+#endif
+        }
 #endif
     }
 
@@ -135,18 +167,20 @@ int bkwrk_get_worker()
 
 int bkwrk_dispatch_worker(unsigned int wrkid)
 {
-#ifdef WORK_THREAD
-    unsigned int tid = wrkid_tid[wrkid];
+    pid_t tid = wrkid_tid[wrkid];
 
     if (worker[wrkid].func == NULL)
         return -1;
 
 #ifdef DEBUG
-    fprintf(stderr, "brkwrk dispatch wrkid %d - send signal %u \n", wrkid, tid);
+    fprintf(stderr, "bkwrk dispatch wrkid %d - send signal %u \n", wrkid, tid);
 #endif
 
+#ifdef WORK_THREAD
     syscall(SYS_tkill, tid, SIG_DISPATCH);
 #else
-    /* TODO: Implement fork version to signal worker process here */
+    kill(tid, SIG_DISPATCH);
 #endif
+
+    return 0;
 }
